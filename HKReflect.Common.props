@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Project>
+	<PropertyGroup>
+		<Version>0.1.0</Version>
+		<Authors>Clazex</Authors>
+
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Copyright>Copyright © 2023 Clazex</Copyright>
+		<RepositoryUrl>https://github.com/Clazex/HollowKnight.HKReflect</RepositoryUrl>
+
+		<LangVersion>10.0</LangVersion>
+		<Deterministic>True</Deterministic>
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)'))=./</PathMap>
+
+		<HKRefs Condition="$(HKRefs) == ''">../HKManaged/</HKRefs>
+	</PropertyGroup>
+</Project>
