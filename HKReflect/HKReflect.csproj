@@ -4,6 +4,7 @@
 		<Description>Provides dummy publicized definition of Assembly-CSharp types for easy access</Description>
 
 		<PackageProjectUrl>https://github.com/Clazex/HollowKnight.HKReflect/HKReflect#readme</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageTags>HollowKnight, Modding, $(PackageTags)</PackageTags>
 
 		<TargetFramework>net472</TargetFramework>
@@ -19,6 +20,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="/" />
+
 		<PackageReference Include="Fody" Version="6.6.4" PrivateAssets="none" />
 		<PackageReference Include="FodyPackaging" Version="6.6.4" PrivateAssets="All" />
 	</ItemGroup>
