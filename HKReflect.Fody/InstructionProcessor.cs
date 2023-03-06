@@ -66,11 +66,11 @@ public sealed partial class ModuleWeaver {
 					.MakeGenericMethod(ModuleDefinition.ImportReference(fieldRef.FieldType)),
 			},
 			Code.Stfld => fieldRef.FieldType.FullName switch {
-				"System.Boolean" => pdType.Methods.First(method => method.Name == "SetBool"),
-				"System.Int32" => pdType.Methods.First(method => method.Name == "SetInt"),
-				"System.Single" => pdType.Methods.First(method => method.Name == "SetFloat"),
-				"UnityEngine.Vector3" => pdType.Methods.First(method => method.Name == "SetVector3"),
-				_ => pdType.Methods.First(method => method.Name == "SetVariable")
+				"System.Boolean" => pdType.Methods.First(method => method.Name == "SetBoolSwappedArgs"),
+				"System.Int32" => pdType.Methods.First(method => method.Name == "SetIntSwappedArgs"),
+				"System.Single" => pdType.Methods.First(method => method.Name == "SetFloatSwappedArgs"),
+				"UnityEngine.Vector3" => pdType.Methods.First(method => method.Name == "SetVector3SwappedArgs"),
+				_ => pdType.Methods.First(method => method.Name == "SetVariableSwappedArgs")
 					.MakeGenericMethod(ModuleDefinition.ImportReference(fieldRef.FieldType)),
 			},
 			Code code => throw new WeavingException($"{body.Method.FullName} contains invalid opcode {code} for accessing field {fieldRef.FullName}")
