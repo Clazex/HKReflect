@@ -103,7 +103,7 @@ This...
 ```cs
 using static HKReflect.Singletons;
 
-LogDebug(PlayerDataR.atBench);
+PlayerDataR.atBench = false;
 LogDebug(PlayerDataR.playTime);
 LogDebug(PlayerDataR.mapZone);
 LogDebug(PlayerDataR.statueStateRadiance);
@@ -113,7 +113,7 @@ LogDebug(PlayerDataR.equippedCharms);
 ...compiles to
 
 ```cs
-LogDebug(PlayerData.instance.GetBool("atBench"));
+PlayerData.instance.SetBoolSwappedArgs(false, "atBench");
 LogDebug(PlayerData.instance.GetFloat("playTime"));
 LogDebug(PlayerData.instance.GetVariable<MapZone>("mapZone"));
 LogDebug(PlayerData.instance.GetVariable<BossStatue.Completion>("statueStateRadiance"));
