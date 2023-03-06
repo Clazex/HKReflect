@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyTitle>HKReflect</AssemblyTitle>
+		<Description>Provides dummy publicized definition of Assembly-CSharp types for easy access</Description>
+
+		<PackageProjectUrl>https://github.com/Clazex/HollowKnight.HKReflect/HKReflect#readme</PackageProjectUrl>
+		<PackageTags>HollowKnight, Modding, $(PackageTags)</PackageTags>
+
+		<TargetFramework>net472</TargetFramework>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<Import Project="../HKReflect.Common.props" />
+
+	<PropertyGroup>
+		<AssemblyCSharpPath>$([System.IO.Path]::GetFullPath('$(HKRefs)/Assembly-CSharp.dll'))</AssemblyCSharpPath>
+
+		<BaseNamespace>$(AssemblyTitle)</BaseNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Fody" Version="6.6.4" PrivateAssets="none" />
+		<PackageReference Include="FodyPackaging" Version="6.6.4" PrivateAssets="All" />
+	</ItemGroup>
+
+	<Target Name="GenerateActualAssembly" AfterTargets="AfterBuild">
+		<PropertyGroup>
+			<ReflectGenPath>$([System.IO.Path]::GetFullPath('./../ReflectGen/dist/ReflectGen'))</ReflectGenPath>
+		</PropertyGroup>
+
+		<Exec Command='"$(ReflectGenPath)" "$(AssemblyCSharpPath)" $(BaseNamespace) "$(TargetPath)"' />
+	</Target>
+</Project>

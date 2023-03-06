@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyTitle>HKReflect.Fody</AssemblyTitle>
+		<Description>Fody weaver that replace HKReflect dummy definition with actual member access</Description>
+
+		<PackageProjectUrl>https://github.com/Clazex/HollowKnight.HKReflect/HKReflect.Fody#readme</PackageProjectUrl>
+
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
+
+	<Import Project="../HKReflect.Common.props" />
+
+	<ItemGroup>
+		<PackageReference Include="FodyHelpers" Version="6.6.4" />
+	</ItemGroup>
+</Project>
