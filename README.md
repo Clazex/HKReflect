@@ -20,7 +20,7 @@ Install [`Fody`](https://www.nuget.org/packages/Fody/) and [`HKReflect.Fody`](ht
 <!-- In *.csproj -->
 <ItemGroup>
 	<PackageReference Include="Fody" Version="6.6.4" PrivateAssets="all" />
-	<PackageReference Include="HKReflect.Fody" Version="0.1.1" PrivateAssets="all" />
+	<PackageReference Include="HKReflect.Fody" Version="0.2.0" PrivateAssets="all" />
 </ItemGroup>
 ```
 
