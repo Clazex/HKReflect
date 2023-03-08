@@ -7,19 +7,8 @@ using Mono.Cecil;
 namespace HKReflect.Fody;
 
 internal static class Extensions {
-	internal static bool EnclosedWith(this string self, string start, string end) =>
-		self.StartsWith(start) && self.EndsWith(end);
-
 	public static string StripStart(this string self, string val) =>
 		self.StartsWith(val) ? self.Substring(val.Length) : self;
-
-	public static string StripEnd(this string self, string val) =>
-		self.EndsWith(val) ? self.Substring(0, self.Length - val.Length) : self;
-
-	internal static (string ns, string name) SplitFullName(this string self) => self.LastIndexOf('.') switch {
-		-1 => (string.Empty, self),
-		int i => (self.Substring(0, i), self.Substring(i + 1))
-	};
 
 
 	internal static void ForEach<T>(this IEnumerable<T> self, Action<T> action) {

@@ -10,10 +10,9 @@ namespace HKReflect.Fody;
 public sealed partial class ModuleWeaver : BaseModuleWeaver {
 	public override bool ShouldCleanReference => true;
 
-	public override IEnumerable<string> GetAssembliesForScanning() =>
-		ResolveAssembly("HKReflect")!.MainModule.AssemblyReferences
-			.Select(i => i.Name)
-			.Intersect(ModuleDefinition.AssemblyReferences.Select(i => i.Name));
+	public override IEnumerable<string> GetAssembliesForScanning() {
+		yield return "Assembly-CSharp";
+	}
 
 	public override void Execute() {
 		if (!ModuleDefinition.AssemblyReferences.Any(asmRef => asmRef.Name == "Assembly-CSharp")) {
