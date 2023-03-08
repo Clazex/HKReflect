@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 
 using Fody;
@@ -9,17 +10,17 @@ using Mono.Cecil.Rocks;
 namespace HKReflect.Fody;
 
 public sealed partial class ModuleWeaver {
-	private void ProcessMethod(MethodDefinition methodDef) {
+	private void ProcessMethod(MethodDefinition methodDef, TypeDefinition typeDef) {
 		foreach (GenericParameter gp in methodDef.GenericParameters) {
 			foreach (GenericParameterConstraint constraint in gp.Constraints) {
-				if (constraint.ConstraintType.IsInNamespace(nameof(HKReflect))) {
+				if (constraint.ConstraintType.IsHKReflectType()) {
 					throw new WeavingException(methodDef.FullName + " contains generic constraint(s) of reflected type, please use original type instead");
 				}
 			}
 		}
 
 		foreach (ParameterDefinition paramDef in methodDef.Parameters) {
-			if (paramDef.ParameterType.IsInNamespace(nameof(HKReflect))) {
+			if (paramDef.ParameterType.IsHKReflectType()) {
 				throw new WeavingException(methodDef.FullName + " contains parameter(s) of reflected type, please use original type instead");
 			}
 		}
@@ -35,7 +36,7 @@ public sealed partial class ModuleWeaver {
 			.ToArray();
 
 		foreach (VariableDefinition varDef in body.Variables) {
-			if (varDef.VariableType.IsInNamespace(nameof(HKReflect))) {
+			if (varDef.VariableType.IsHKReflectType()) {
 				varDef.VariableType = ModuleDefinition.ImportReference(FindOrigType(varDef.VariableType));
 			}
 		}
@@ -43,7 +44,7 @@ public sealed partial class ModuleWeaver {
 		body.SimplifyMacros();
 
 		foreach (Instruction inst in body.Instructions.ToArray()) {
-			ProcessInstruction(inst, methodDef, body, branchInsts);
+			ProcessInstruction(inst, methodDef, typeDef, branchInsts);
 		}
 
 		body.Optimize();

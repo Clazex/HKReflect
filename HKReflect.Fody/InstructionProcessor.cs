@@ -9,53 +9,42 @@ using Mono.Cecil.Cil;
 namespace HKReflect.Fody;
 
 public sealed partial class ModuleWeaver {
-	private void ProcessInstruction(Instruction inst, MethodDefinition methodDef, MethodBody body, Instruction[] branchInsts) {
-		if (inst.Operand is TypeReference typeRef && typeRef.IsInNamespace(nameof(HKReflect))) {
+	private void ProcessInstruction(
+		Instruction inst,
+		MethodDefinition methodDef,
+		TypeDefinition typeDef,
+		Instruction[] branchInsts
+	) {
+		if (inst.Operand is TypeReference typeRef && typeRef.IsHKReflectType()) {
 			throw new WeavingException(methodDef.FullName + " contains typeof on HKReflect types");
-		} else if (inst.Operand is FieldReference fieldRef && fieldRef.DeclaringType.IsInNamespace(nameof(HKReflect))) {
-			if (fieldRef.DeclaringType.IsInNamespace(nameof(HKReflect))) {
-				if (fieldRef.DeclaringType.IsInNamespace("HKReflect.Static")) {
-					ProcessFieldAccessStatic(inst, fieldRef);
-				} else {
-					ProcessFieldAccess(inst, fieldRef, body, branchInsts);
-				}
-			}
-		} else if (inst.Operand is MethodReference methodRef) {
+		} else if (inst.Operand is FieldReference fieldRef && fieldRef.DeclaringType.IsHKReflectType()) {
+			ProcessFieldAccess(inst, fieldRef, methodDef, typeDef, branchInsts);
+		} else if (inst.Operand is MethodReference methodRef && methodRef.DeclaringType.IsHKReflectType()) {
 			if (methodRef.DeclaringType.FullName == "HKReflect.Reflector") {
 				Reroute(branchInsts, inst, inst.Next);
-				body.GetILProcessor().Remove(inst);
+				methodDef.Body.GetILProcessor().Remove(inst);
 			} else if (methodRef.DeclaringType.FullName == "HKReflect.Singletons") {
 				Instruction accessInst = CreateSingletonInstanceGetInstruction(methodRef.ReturnType);
 				inst.OpCode = accessInst.OpCode;
 				inst.Operand = accessInst.Operand;
-			} else if (methodRef.DeclaringType.IsInNamespace(nameof(HKReflect))) {
-				if (methodRef.DeclaringType.IsInNamespace("HKReflect.Static")) {
-					ProcessMethodCallStatic(inst, methodRef);
-				} else {
-					ProcessMethodCall(inst, methodRef);
-				}
+			} else {
+				ProcessMethodCall(inst, methodRef);
 			}
 		}
 	}
 
-	private void ProcessFieldAccessInternal(Instruction inst, FieldReference fieldRef) =>
-		inst.Operand = ModuleDefinition.ImportReference(fieldRef);
-
-	private void ProcessFieldAccess(Instruction inst, FieldReference fieldRef, MethodBody body, Instruction[] branchInsts) {
-		TypeDefinition origType = FindOrigType(fieldRef.DeclaringType);
-
-		if (origType.FullName == "PlayerData" && inst.OpCode.Code is Code.Ldfld or Code.Stfld) {
-			ProcessFieldAccessPlayerData(inst, origType, fieldRef, body, branchInsts);
+	private void ProcessFieldAccess(Instruction inst, FieldReference fieldRef, MethodDefinition methodDef, TypeDefinition typeDef, Instruction[] branchInsts) {
+		if (fieldRef.DeclaringType.FullName == "HKReflect.PlayerData" && inst.OpCode.Code is Code.Ldfld or Code.Stfld) {
+			ProcessFieldAccessPlayerData(inst, fieldRef, methodDef, typeDef, branchInsts);
 			return;
 		}
 
-		ProcessFieldAccessInternal(inst, FindOrigField(origType, fieldRef));
+		inst.Operand = ModuleDefinition.ImportReference(FindOrigField(fieldRef.DeclaringType, fieldRef));
 	}
 
-	private void ProcessFieldAccessStatic(Instruction inst, FieldReference fieldRef) =>
-		ProcessFieldAccessInternal(inst, FindOrigField(FindOrigTypeStatic(fieldRef.DeclaringType), fieldRef));
+	private void ProcessFieldAccessPlayerData(Instruction inst, FieldReference fieldRef, MethodDefinition methodDef, TypeDefinition typeDef, Instruction[] branchInsts) {
+		TypeDefinition pdType = FindTypeDefinition("PlayerData");
 
-	private void ProcessFieldAccessPlayerData(Instruction inst, TypeDefinition pdType, FieldReference fieldRef, MethodBody body, Instruction[] branchInsts) {
 		MethodReference methodRef = inst.OpCode.Code switch {
 			Code.Ldfld => fieldRef.FieldType.FullName switch {
 				"System.Boolean" => pdType.Methods.First(method => method.Name == "GetBool"),
@@ -73,25 +62,19 @@ public sealed partial class ModuleWeaver {
 				_ => pdType.Methods.First(method => method.Name == "SetVariableSwappedArgs")
 					.MakeGenericMethod(ModuleDefinition.ImportReference(fieldRef.FieldType)),
 			},
-			Code code => throw new WeavingException($"{body.Method.FullName} contains invalid opcode {code} for accessing field {fieldRef.FullName}")
+			Code code => throw new WeavingException($"{methodDef.FullName} contains invalid opcode {code} for accessing field {fieldRef.FullName}")
 		};
 
 		var ldFldNameInst = Instruction.Create(OpCodes.Ldstr, fieldRef.Name);
-		body.GetILProcessor().InsertBefore(inst, ldFldNameInst);
+		methodDef.Body.GetILProcessor().InsertBefore(inst, ldFldNameInst);
 		Reroute(branchInsts, inst, ldFldNameInst);
 		inst.OpCode = OpCodes.Callvirt;
 		inst.Operand = ModuleDefinition.ImportReference(methodRef);
 	}
 
 
-	private void ProcessMethodCallInternal(Instruction inst, MethodReference methodRef) =>
-		inst.Operand = ModuleDefinition.ImportReference(methodRef);
-
 	private void ProcessMethodCall(Instruction inst, MethodReference methodRef) =>
-		ProcessMethodCallInternal(inst, FindOrigMethod(FindOrigType(methodRef.DeclaringType), methodRef));
-
-	private void ProcessMethodCallStatic(Instruction inst, MethodReference methodRef) =>
-		ProcessMethodCallInternal(inst, FindOrigMethod(FindOrigTypeStatic(methodRef.DeclaringType), methodRef));
+		inst.Operand = ModuleDefinition.ImportReference(FindOrigMethod(methodRef.DeclaringType, methodRef));
 
 
 	private Instruction CreateSingletonInstanceGetInstruction(TypeReference typeRef) => typeRef.FullName switch {

@@ -38,6 +38,8 @@ internal static class Extensions {
 	internal static bool IsInNamespace(this TypeReference self, string ns) =>
 		self.DeclaringType?.IsInNamespace(ns) ?? (self.Namespace == ns || self.Namespace.StartsWith(ns + '.'));
 
+	internal static bool IsHKReflectType(this TypeReference self) => self.IsInNamespace(nameof(HKReflect));
+
 
 	internal static GenericInstanceMethod MakeGenericMethod(this MethodReference self, params TypeReference[] arguments) {
 		if (arguments.Length != self.GenericParameters.Count) {

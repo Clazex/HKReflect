@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using Mono.Cecil;
 
 namespace HKReflect.Fody;
@@ -10,6 +12,6 @@ public sealed partial class ModuleWeaver {
 
 		typeDef.Fields.ForEach(ProcessField);
 
-		typeDef.Methods.ParallelForEach(ProcessMethod);
+		typeDef.Methods.ParallelForEach(method => ProcessMethod(method, typeDef));
 	}
 }

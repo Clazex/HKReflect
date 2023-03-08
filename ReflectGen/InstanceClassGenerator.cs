@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace ReflectGen;
 
@@ -35,6 +36,30 @@ internal sealed partial class Program {
 				| (typeDef.IsNested ? TypeAttributes.NestedPublic : TypeAttributes.Public)
 		));
 
+		Lazy<ILProcessor> fieldMap = new(() => {
+			MethodDefinition fieldMapMethod = new(
+				"<OrigFields>",
+				MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.SpecialName,
+				module.TypeSystem.Void
+			);
+
+			resTypeDef.Value.Methods.Add(fieldMapMethod);
+
+			return fieldMapMethod.Body.GetILProcessor();
+		});
+
+		Lazy<ILProcessor> methodMap = new(() => {
+			MethodDefinition methodMapMethod = new(
+				"<OrigMethods>",
+				MethodAttributes.Assembly | MethodAttributes.Static | MethodAttributes.SpecialName,
+				module.TypeSystem.Void
+			);
+
+			resTypeDef.Value.Methods.Add(methodMapMethod);
+
+			return methodMapMethod.Body.GetILProcessor();
+		});
+
 		foreach (FieldDefinition fieldDef in typeDef.Fields) {
 			if (IsCompilerGenerated(fieldDef) || !IsPubliclyAvailable(fieldDef)) {
 				continue;
@@ -45,6 +70,9 @@ internal sealed partial class Program {
 				FieldAttributes.Public | (fieldDef.IsStatic ? FieldAttributes.Static : FieldAttributes.CompilerControlled),
 				module.ImportReference(fieldDef.FieldType)
 			));
+
+			fieldMap.Value.Emit(OpCodes.Ldstr, fieldDef.Name);
+			fieldMap.Value.Emit(OpCodes.Stfld, module.ImportReference(fieldDef));
 		}
 
 		foreach (PropertyDefinition propDef in typeDef.Properties) {
@@ -69,6 +97,9 @@ internal sealed partial class Program {
 
 				resTypeDef.Value.Methods.Add(get);
 				resPropDef.GetMethod = get;
+
+				methodMap.Value.Emit(OpCodes.Ldstr, get.FullName);
+				methodMap.Value.Emit(OpCodes.Call, module.ImportReference(propDef.GetMethod));
 			}
 
 			if (propDef.SetMethod != null) {
@@ -84,6 +115,9 @@ internal sealed partial class Program {
 
 				resTypeDef.Value.Methods.Add(set);
 				resPropDef.SetMethod = set;
+
+				methodMap.Value.Emit(OpCodes.Ldstr, set.FullName);
+				methodMap.Value.Emit(OpCodes.Call, module.ImportReference(propDef.SetMethod));
 			}
 
 			resTypeDef.Value.Properties.Add(resPropDef);
@@ -111,6 +145,7 @@ internal sealed partial class Program {
 				(methodDef.Attributes & (~MethodAttributes.MemberAccessMask)) | MethodAttributes.Public,
 				module.ImportReference(methodDef.ReturnType)
 			);
+
 			foreach (ParameterDefinition origPd in methodDef.Parameters) {
 				ParameterDefinition pd = new(origPd.Name, origPd.Attributes, module.ImportReference(origPd.ParameterType));
 				foreach (CustomAttribute attr in origPd.CustomAttributes) {
@@ -121,6 +156,9 @@ internal sealed partial class Program {
 			}
 
 			resTypeDef.Value.Methods.Add(resMethodDef);
+
+			methodMap.Value.Emit(OpCodes.Ldstr, resMethodDef.FullName);
+			methodMap.Value.Emit(OpCodes.Call, module.ImportReference(methodDef));
 		}
 
 		foreach (TypeDefinition nestedType in typeDef.NestedTypes) {
@@ -131,6 +169,9 @@ internal sealed partial class Program {
 
 		if (resTypeDef.IsValueCreated) {
 			TypeDefinition resTypeDefVal = resTypeDef.Value;
+
+			fieldMap.Value.Emit(OpCodes.Ret);
+			methodMap.Value.Emit(OpCodes.Ret);
 
 			MethodDefinition reflectMethodDef = new("Reflect", MethodAttributes.Public | MethodAttributes.Static, resTypeDefVal);
 			reflectMethodDef.Parameters.Add(new("self", ParameterAttributes.None, module.ImportReference(typeDef)));
