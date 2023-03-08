@@ -27,7 +27,9 @@ internal sealed partial class Program {
 		}
 
 		Lazy<TypeDefinition> resTypeDef = new(() => new(
-			string.IsNullOrEmpty(typeDef.Namespace) ? baseNs : $"{baseNs}.{typeDef.Namespace}",
+			typeDef.IsNested
+				? string.Empty
+				: string.IsNullOrEmpty(typeDef.Namespace) ? baseNs : $"{baseNs}.{typeDef.Namespace}",
 			typeDef.Name,
 			(typeDef.Attributes & (~TypeAttributes.NestedFamORAssem))
 				| (typeDef.IsNested ? TypeAttributes.NestedPublic : TypeAttributes.Public)

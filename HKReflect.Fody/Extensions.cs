@@ -36,7 +36,7 @@ internal static class Extensions {
 
 
 	internal static bool IsInNamespace(this TypeReference self, string ns) =>
-		self.Namespace == ns || self.Namespace.StartsWith(ns + '.');
+		self.DeclaringType?.IsInNamespace(ns) ?? (self.Namespace == ns || self.Namespace.StartsWith(ns + '.'));
 
 
 	internal static GenericInstanceMethod MakeGenericMethod(this MethodReference self, params TypeReference[] arguments) {

@@ -14,7 +14,9 @@ internal sealed partial class Program {
 		Dictionary<TypeDefinition, string> typesToAddInheritance
 	) {
 		Lazy<TypeDefinition> resTypeDef = new(() => new(
-			string.IsNullOrEmpty(typeDef.Namespace) ? baseNs + ".Static" : $"{baseNs}.Static.{typeDef.Namespace}",
+			typeDef.IsNested
+				? string.Empty
+				: string.IsNullOrEmpty(typeDef.Namespace) ? baseNs + ".Static" : $"{baseNs}.Static.{typeDef.Namespace}",
 			typeDef.Name + "R",
 			(typeDef.Attributes & (~TypeAttributes.NestedFamORAssem))
 				| (typeDef.IsNested ? TypeAttributes.NestedPublic : TypeAttributes.Public)
