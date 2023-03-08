@@ -11,5 +11,7 @@ public sealed partial class ModuleWeaver {
 		typeDef.Fields.ForEach(ProcessField);
 
 		typeDef.Methods.ParallelForEach(method => ProcessMethod(method, typeDef));
+
+		typeDef.NestedTypes.ParallelForEach(ProcessType);
 	}
 }
