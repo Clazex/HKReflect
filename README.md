@@ -132,6 +132,8 @@ Due to its nature of only existing in compile-time, some restrictions apply to t
 
 - :boom: Relying on the IL layout of methods that will be processed by HKReflect, i.e., ones that contain references to HKReflect types.
 - :boom: Using HKReflect types as generic arguments.
+- :boom: Using HKReflect types as tuple components.
+- :boom: Obtaining HKReflect `Assembly`.
 - :boom: Obtaining HKReflect types’ `Type` dynamically, e.g. via `Assembly.GetType`.
 - :construction: Declaring fields or properties of HKReflect types.
 - :construction: Declaring methods who use HKReflect types as parameters and/or return them.
@@ -139,6 +141,7 @@ Due to its nature of only existing in compile-time, some restrictions apply to t
 - :construction: Using HKReflect types as generic constraints.
 - :white_check_mark: Declaring local variables of HKReflect types.
 - :white_check_mark: Passing instances of HKReflect types to methods that accepts an `object`.​ (Original object will be passed)
+- :white_check_mark: Returning instances of HKReflect types in methods that return an `object`. (Original object will be returned)
 - :white_check_mark: Using `GetType` on HKReflect type instances. (Result will be original type)​
 
 ### Acquisition of `MemberInfo`s
